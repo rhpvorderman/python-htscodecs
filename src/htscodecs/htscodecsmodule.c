@@ -26,4 +26,18 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#define PY_SSIZE_T_CLEAN
 
+
+#define Py_LIMITED_API 0x030B0000  /* 3.11 or higher. */
+#include "Python.h"
+
+#include "htscodecs/arith_dynamic.h"
+#include "htscodecs/fqzcomp_qual.h"
+#include "htscodecs/htscodecs.h"
+#include "htscodecs/pack.h"
+#include "htscodecs/rANS_static4x16.h"
+#include "htscodecs/rANS_static.h"
+#include "htscodecs/rle.h"
+#include "htscodecs/tokenise_name3.h"
+#include "htscodecs/tokenise_varint.h"
