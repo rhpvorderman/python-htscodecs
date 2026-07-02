@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PY_SSIZE_T_CLEAN
 
 
-#define Py_LIMITED_API 0x030B0000  /* 3.11 or higher. */
+#define Py_LIMITED_API 0x030D0000  /* 3.13 or higher. */
 #include "Python.h"
 
 #include "htscodecs/arith_dynamic.h"
@@ -40,4 +40,32 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "htscodecs/rANS_static.h"
 #include "htscodecs/rle.h"
 #include "htscodecs/tokenise_name3.h"
-#include "htscodecs/tokenise_varint.h"
+#include "htscodecs/varint.h"
+
+static PyMethodDef htscodecs_methods[] = {
+   NULL
+};
+static struct _htscodecs_state {
+} HtsCodecsState;
+
+static int htscodecs_exec(PyObject *module)
+{
+   return 0;
+}
+
+static PyModuleDef_Slot htscodecs_slots [] = {
+   {Py_mod_exec, htscodecs_exec},
+   {0, NULL}
+};
+
+static PyModuleDef htscodecs_module_def = {
+   PyModuleDef_HEAD_INIT,
+   .m_name = "htscodecs.htscodecs",
+   .m_doc = NULL,
+   .m_size = sizeof(HtsCodecsState),
+   .m_methods = htscodecs_methods,
+   .m_slots = htscodecs_slots,
+   .m_traverse = NULL,
+   .m_clear = NULL,
+   .m_free = NULL,
+};
