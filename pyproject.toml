@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=77", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "htscodecs"
+dynamic = ["version"]
+description = "Python bindings for htscodecs"
+license="BSD-3-Clause"
+keywords=["htscodecs", "compression", "htslib"]
+authors = [{name = "Leiden University Medical Center"},
+           {email = "r.h.p.vorderman@lumc.nl"}]
+readme = "README.rst"
+requires-python = ">=3.9"  # Because of setuptools version
+classifiers = [
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
+        "Programming Language :: Python :: Implementation :: CPython",
+        "Programming Language :: C",
+        "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+urls.homepage = "https://github.com/rhpvorderman/python-htscodecs"
+
+[tool.setuptools_scm]
+version_file = "src/htscodecs/_version.py"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["htscodecs"]
+
+[tool.setuptools.package-data]
+htscodecs = ['*.pyi', 'py.typed',
+        'htscodecs/LICENSE.md',
+        'htscodecs/README.md',
+        'htscodecs/NEWS.md',
+]
+[tool.setuptools.exclude-package-data]
+htscodecs = [
+        "*.c",
+        "*.h",
+        "htscodecs/*/*",
+        "htscodecs/*yml",
+        "htscodecs/.*",
+        "htscodecs/configure.ac",
+        "htscodecs/MAINTAINERS.md",
+        "htscodecs/Makefile.am",
+]
