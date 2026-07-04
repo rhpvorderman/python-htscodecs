@@ -77,7 +77,7 @@ static PyModuleDef_Slot htscodecs_slots [] = {
 
 static PyModuleDef htscodecs_module_def = {
    PyModuleDef_HEAD_INIT,
-   .m_name = "htscodecs.htscodecs",
+   .m_name = "htscodecs._htscodecs",
    .m_doc = NULL,
    .m_size = sizeof(HtsCodecsState),
    .m_methods = htscodecs_methods,
@@ -88,6 +88,6 @@ static PyModuleDef htscodecs_module_def = {
 };
 
 PyMODINIT_FUNC
-PyInit_htscodecs(void) {
+PyInit__htscodecs(void) {
    return PyModuleDef_Init(&htscodecs_module_def);
 }
