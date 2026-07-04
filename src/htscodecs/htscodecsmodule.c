@@ -42,9 +42,26 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "htscodecs/tokenise_name3.h"
 #include "htscodecs/varint.h"
 
+PyDoc_STRVAR(htscodecs_version__doc__,
+"htscodecs_version($module)\n"
+"--\n"
+"\n"
+"Return the version of the htscodecs C library in use.\n"
+);
+
+
+static PyObject *
+py_htscodecs_version(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(args))
+{
+   return PyUnicode_FromString(htscodecs_version());
+}
+
 static PyMethodDef htscodecs_methods[] = {
-   NULL
+   {"htscodecs_version", py_htscodecs_version, METH_NOARGS, 
+    htscodecs_version__doc__},
+   {NULL,}
 };
+
 static struct _htscodecs_state {
 } HtsCodecsState;
 
@@ -69,3 +86,8 @@ static PyModuleDef htscodecs_module_def = {
    .m_clear = NULL,
    .m_free = NULL,
 };
+
+PyMODINIT_FUNC
+PyInit_htscodecs(void) {
+   return PyModuleDef_Init(&htscodecs_module_def);
+}

@@ -124,6 +124,6 @@ def build_htscodecs():
 setup(
     cmdclass={"build_ext": BuildHtsCodecsExt},
     ext_modules=[
-        Extension("htsccodecs.htscodecs", ["src/htscodecs/htscodecsmodule.c"]),
+        Extension("htscodecs.htscodecs", ["src/htscodecs/htscodecsmodule.c"]),
     ]
 )
