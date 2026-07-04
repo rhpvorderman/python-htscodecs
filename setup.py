@@ -105,12 +105,14 @@ def build_htscodecs():
     # it.
     build_env = os.environ.copy()
     run_args = dict(cwd=build_dir, env=build_env)
-    if sys.platform == "darwin":  # Cmake does not work properly
-        subprocess.run([os.path.join(build_dir, "configure", "--with-pic", "--disable-shared")], **run_args)
+    if sys.platform == "darwin":
+        subprocess.run(["autoreconf", "-i", build_dir])
+        subprocess.run([os.path.join(build_dir, "configure"), "--with-pic", "--disable-shared"], **run_args)
         make_program = "gmake" if shutil.which("gmake") else "make"
         subprocess.run([make_program], **run_args)
     elif sys.platform == "linux":
-        subprocess.run([os.path.join(build_dir, "configure", "--with-pic", "--disable-shared")], **run_args)
+        subprocess.run(["autoreconf", "-i", build_dir])
+        subprocess.run([os.path.join(build_dir, "configure"), "--with-pic", "--disable-shared"], **run_args)
         subprocess.run(["make", "-j", str(cpu_count)], **run_args)
     else:
         raise NotImplementedError(f"Unsupported platform: {sys.platform}")
