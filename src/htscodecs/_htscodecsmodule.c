@@ -29,7 +29,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PY_SSIZE_T_CLEAN
 
 
-#define Py_LIMITED_API 0x030D0000  /* 3.13 or higher. */
 #include "Python.h"
 
 #include "htscodecs/arith_dynamic.h"
@@ -49,6 +48,7 @@ PyDoc_STRVAR(htscodecs_version__doc__,
 "Return the version of the htscodecs C library in use.\n"
 );
 
+#define htscodecs_version_method METH_NOARGS
 
 static PyObject *
 py_htscodecs_version(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(args))
@@ -56,9 +56,61 @@ py_htscodecs_version(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(args))
    return PyUnicode_FromString(htscodecs_version());
 }
 
+
+PyDoc_STRVAR(rans_compress_4x16__doc__,
+"rans_compress_4x16($module, data, /, order=0)\n"
+"--\n"
+"\n"
+"Compress data using the rANS 4x16 codec.\n"
+"\n"
+"  data\n"
+"    bytes or any object that supports the buffer protocol.\n"
+"\n"
+"Returns a bytes object.");
+
+#define rans_compress_4x16_method (METH_VARARGS | METH_KEYWORDS)
+
+static PyObject *
+py_rans_compress_4x16(PyObject *module, PyObject *args, PyObject *kwargs)
+{
+   Py_buffer data = {NULL, NULL}; 
+   int order = 0;
+   static char *const keywords[] =  {"", "order", NULL};
+   static const char *format = "y*|i:_htscodecs.rans_compress_4x16";
+   int ret = PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords, 
+                                         &data, &order);
+   if (!ret) {
+      return NULL;
+   }
+   unsigned int out_size = rans_compress_bound_4x16(data.len, order);
+   PyObject *result = PyBytes_FromStringAndSize(NULL, out_size);
+   if (result == NULL) {
+      PyBuffer_Release(&data);
+      return PyErr_NoMemory();
+   }
+   unsigned char *result_buffer = (unsigned char *)PyBytes_AsString(result);
+   unsigned char *out_value = rans_compress_to_4x16(
+      data.buf, data.len, result_buffer, &out_size, order);
+   if (out_value == NULL) {
+      PyBuffer_Release(&data);
+      PyErr_Format(
+         PyExc_RuntimeError, 
+         "Unable to run rans_compress_to_4x16. Order: %d", order
+      );
+      return NULL;
+   }
+   if (_PyBytes_Resize(&result, out_size) == -1) {
+      PyBuffer_Release(&data);
+      return NULL;
+   }
+   return result;
+}
+
 static PyMethodDef htscodecs_methods[] = {
-   {"htscodecs_version", py_htscodecs_version, METH_NOARGS, 
+   {"htscodecs_version", py_htscodecs_version, htscodecs_version_method, 
     htscodecs_version__doc__},
+   {"rans_compress_4x16", (PyCFunction)py_rans_compress_4x16, rans_compress_4x16_method, 
+    rans_compress_4x16__doc__},
    {NULL,}
 };
 
