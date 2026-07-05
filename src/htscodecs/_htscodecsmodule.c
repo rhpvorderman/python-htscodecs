@@ -56,6 +56,90 @@ py_htscodecs_version(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(args))
    return PyUnicode_FromString(htscodecs_version());
 }
 
+PyDoc_STRVAR(rans_compress_4x8__doc__,
+"rans_compress_4x8($module, data, /, order=0)\n"
+"--\n"
+"\n"
+"Compress data using the rANS 4x8 codec.\n"
+"\n"
+"  data\n"
+"    bytes or any object that supports the buffer protocol.\n"
+"  order\n"
+"    integer, can be 0 or 1 for Order-0 and Order-1 entropy models."
+"\n"
+"Returns a bytes object.");
+
+#define rans_compress_4x8_method (METH_VARARGS | METH_KEYWORDS)
+
+static PyObject *
+rans_compress_4x8(PyObject *module, PyObject *args, PyObject *kwargs)
+{
+   Py_buffer data = {NULL, NULL}; 
+   int order = 0;
+   static char *const keywords[] =  {"", "order", NULL};
+   static const char *format = "y*|i:_htscodecs.rans_compress_4x16";
+   int ret = PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords, 
+                                         &data, &order);
+   if (!ret) {
+      return NULL;
+   }
+   if (order < 0 || order > 1) {
+      PyErr_Format(
+         PyExc_ValueError,
+         "Order must be either 0 or 1, got: %d.", order
+      );
+      PyBuffer_Release(&data);
+      return NULL;
+   }
+   unsigned int out_size = 0;
+   unsigned char *out = rans_compress(data.buf, data.len, &out_size, order);
+   PyBuffer_Release(&data);
+   if (out == NULL) {
+      PyErr_Format(
+         PyExc_RuntimeError, 
+         "Unable to run rans_compress_4x8. order: %d", order
+      );
+      return NULL;
+   }
+   PyObject *result = PyBytes_FromStringAndSize((char *)out, out_size);
+   free(out);
+   return result;
+}
+
+PyDoc_STRVAR(rans_uncompress_4x8__doc__,
+"rans_uncompress_4x8($module, data, /)\n"
+"--\n"
+"\n"
+"Decompress data using the rANS 4x8 codec.\n"
+"\n"
+"  data\n"
+"    bytes or any object that supports the buffer protocol.\n"
+"\n"
+"Returns a bytes object.");
+
+#define rans_uncompress_4x8_method METH_O
+
+static PyObject *
+rans_uncompress_4x8(PyObject *module, PyObject *data_obj)
+{
+   Py_buffer data = {NULL, NULL}; 
+   int ret = PyObject_GetBuffer(data_obj, &data, PyBUF_SIMPLE | PyBUF_READ);
+   if (ret == -1) {
+      return NULL;
+   }
+   unsigned int out_size = 0;
+   /*  */
+   unsigned char *out = rans_uncompress(data.buf, data.len, &out_size);
+   PyBuffer_Release(&data);
+   if (out == NULL) {
+      PyErr_SetString(PyExc_RuntimeError, "Error while decompressing data.");
+      return NULL;
+   }
+   PyObject *result = PyBytes_FromStringAndSize((char *)out, out_size);
+   free(out);
+   return result;
+}
+
 
 PyDoc_STRVAR(rans_compress_4x16_flags__doc__,
 "rans_compress_4x16($module, data, /, flags=0)\n"
@@ -132,23 +216,26 @@ py_rans_uncompress_4x16(PyObject *module, PyObject *data_obj)
    /* Size calculation is complex and dependent on stripe. So let the 
       function allocate its own memory. */
    unsigned char *out = rans_uncompress_4x16(data.buf, data.len, &out_size);
+   PyBuffer_Release(&data);
    if (out == NULL) {
-      PyBuffer_Release(&data);
       PyErr_SetString(PyExc_RuntimeError, "Error while decompressing data.");
       return NULL;
    }
-   PyBuffer_Release(&data);
    PyObject *result = PyBytes_FromStringAndSize((char *)out, out_size);
    free(out);
    return result;
 }
 
 static PyMethodDef htscodecs_methods[] = {
-   {"htscodecs_version", py_htscodecs_version, htscodecs_version_method, 
-    htscodecs_version__doc__},
+   {"htscodecs_version", (PyCFunction)py_htscodecs_version, 
+    htscodecs_version_method, htscodecs_version__doc__},
+   {"rans_compress_4x8", (PyCFunction)rans_compress_4x8, 
+    rans_compress_4x8_method, rans_compress_4x8__doc__},
+   {"rans_uncompress_4x8", (PyCFunction)rans_uncompress_4x8, 
+    rans_uncompress_4x8_method, rans_uncompress_4x8__doc__},
    {"rans_compress_4x16_flags", (PyCFunction)rans_compress_4x16_flags, 
     rans_compress_4x16_flags_method, rans_compress_4x16_flags__doc__},
-   {"rans_uncompress_4x16", py_rans_uncompress_4x16, 
+   {"rans_uncompress_4x16", (PyCFunction)py_rans_uncompress_4x16, 
     rans_uncompress_4x16_method, rans_uncompress_4x16__doc__},
    {NULL,}
 };
