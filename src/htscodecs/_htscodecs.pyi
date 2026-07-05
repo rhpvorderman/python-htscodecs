@@ -26,6 +26,13 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+RANS_FLAG_X32: int
+RANS_FLAG_STRIPE: int
+RANS_FLAG_NOSZ: int
+RANS_FLAG_CAT: int
+RANS_FLAG_RLE: int
+RANS_FLAG_PACK: int
+
 def htscodecs_version() -> str: ...
 def rans_compress_4x8(__data: bytes, order=0) -> bytes: ...
 def rans_uncompress_4x8(__data: bytes) -> bytes: ...

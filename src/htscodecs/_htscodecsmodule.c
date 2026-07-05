@@ -245,6 +245,12 @@ static struct _htscodecs_state {
 
 static int htscodecs_exec(PyObject *module)
 {
+   PyModule_AddIntConstant(module, "RANS_FLAG_X32", RANS_ORDER_X32);
+   PyModule_AddIntConstant(module, "RANS_FLAG_STRIPE", RANS_ORDER_STRIPE);
+   PyModule_AddIntConstant(module, "RANS_FLAG_NOSZ", RANS_ORDER_NOSZ);
+   PyModule_AddIntConstant(module, "RANS_FLAG_CAT", RANS_ORDER_CAT);
+   PyModule_AddIntConstant(module, "RANS_FLAG_RLE", RANS_ORDER_RLE);
+   PyModule_AddIntConstant(module, "RANS_FLAG_PACK", RANS_ORDER_PACK); 
    return 0;
 }
 
