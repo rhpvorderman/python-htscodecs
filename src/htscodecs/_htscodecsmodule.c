@@ -65,6 +65,8 @@ PyDoc_STRVAR(rans_compress_4x16__doc__,
 "\n"
 "  data\n"
 "    bytes or any object that supports the buffer protocol.\n"
+"  order\n"
+"    integer with bit flags set."
 "\n"
 "Returns a bytes object.");
 
@@ -91,8 +93,8 @@ py_rans_compress_4x16(PyObject *module, PyObject *args, PyObject *kwargs)
    unsigned char *result_buffer = (unsigned char *)PyBytes_AsString(result);
    unsigned char *out_value = rans_compress_to_4x16(
       data.buf, data.len, result_buffer, &out_size, order);
+   PyBuffer_Release(&data);
    if (out_value == NULL) {
-      PyBuffer_Release(&data);
       PyErr_Format(
          PyExc_RuntimeError, 
          "Unable to run rans_compress_to_4x16. Order: %d", order
@@ -100,17 +102,54 @@ py_rans_compress_4x16(PyObject *module, PyObject *args, PyObject *kwargs)
       return NULL;
    }
    if (_PyBytes_Resize(&result, out_size) == -1) {
-      PyBuffer_Release(&data);
       return NULL;
    }
+   return result;
+}
+
+PyDoc_STRVAR(rans_uncompress_4x16__doc__,
+"rans_uncompress_4x16($module, data, /)\n"
+"--\n"
+"\n"
+"Decompress data using the rANS 4x16 codec.\n"
+"\n"
+"  data\n"
+"    bytes or any object that supports the buffer protocol.\n"
+"\n"
+"Returns a bytes object.");
+
+#define rans_uncompress_4x16_method METH_O
+
+static PyObject *
+py_rans_uncompress_4x16(PyObject *module, PyObject *data_obj)
+{
+   Py_buffer data = {NULL, NULL}; 
+   int ret = PyObject_GetBuffer(data_obj, &data, PyBUF_SIMPLE | PyBUF_READ);
+   if (ret == -1) {
+      return NULL;
+   }
+   unsigned int out_size = 0;
+   /* Size calculation is complex and dependent on stripe. So let the 
+      function allocate its own memory. */
+   unsigned char *out = rans_uncompress_4x16(data.buf, data.len, &out_size);
+   if (out == NULL) {
+      PyBuffer_Release(&data);
+      PyErr_SetString(PyExc_RuntimeError, "Error while decompressing data.");
+      return NULL;
+   }
+   PyBuffer_Release(&data);
+   PyObject *result = PyBytes_FromStringAndSize((char *)out, out_size);
+   free(out);
    return result;
 }
 
 static PyMethodDef htscodecs_methods[] = {
    {"htscodecs_version", py_htscodecs_version, htscodecs_version_method, 
     htscodecs_version__doc__},
-   {"rans_compress_4x16", (PyCFunction)py_rans_compress_4x16, rans_compress_4x16_method, 
-    rans_compress_4x16__doc__},
+   {"rans_compress_4x16", (PyCFunction)py_rans_compress_4x16, 
+    rans_compress_4x16_method, rans_compress_4x16__doc__},
+   {"rans_uncompress_4x16", py_rans_uncompress_4x16, 
+    rans_uncompress_4x16_method, rans_uncompress_4x16__doc__},
    {NULL,}
 };
 
