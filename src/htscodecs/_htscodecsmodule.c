@@ -175,7 +175,7 @@ rans_compress_4x16_flags(PyObject *module, PyObject *args, PyObject *kwargs)
    if (out == NULL) {
       PyErr_Format(
          PyExc_RuntimeError, 
-         "Unable to run rans_compress_to_4x16. flags: %d", flags
+         "Unable to run rans_compress_4x16. flags: %d", flags
       );
       return NULL;
    }
@@ -219,6 +219,86 @@ py_rans_uncompress_4x16(PyObject *module, PyObject *data_obj)
    return result;
 }
 
+
+PyDoc_STRVAR(arith_compress_flags__doc__,
+"arith_compress_flags($module, data, /, flags=0)\n"
+"--\n"
+"\n"
+"Compress data using adaptive arithmetic coding.\n"
+"\n"
+"  data\n"
+"    bytes or any object that supports the buffer protocol.\n"
+"  flags\n"
+"    integer with bit flags set."
+"\n"
+"Returns a bytes object.");
+
+#define arith_compress_flags_method (METH_VARARGS | METH_KEYWORDS)
+
+static PyObject *
+arith_compress_flags(PyObject *module, PyObject *args, PyObject *kwargs)
+{
+   Py_buffer data = {NULL, NULL}; 
+   int flags = 0;
+   static char *const keywords[] =  {"", "flags", NULL};
+   static const char *format = "y*|i:_htscodecs.arith_compress";
+   int ret = PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords, 
+                                         &data, &flags);
+   if (!ret) {
+      return NULL;
+   }
+   unsigned int out_size = 0;
+   unsigned char *out = arith_compress(
+      data.buf, data.len, &out_size, flags);
+   PyBuffer_Release(&data);
+   if (out == NULL) {
+      PyErr_Format(
+         PyExc_RuntimeError, 
+         "Unable to run arith_compress. flags: %d", flags
+      );
+      return NULL;
+   }
+   PyObject *result = PyBytes_FromStringAndSize((char *)out, out_size);
+   free(out);
+   return result;
+}
+
+PyDoc_STRVAR(arith_uncompress__doc__,
+"arith_uncompress($module, data, /)\n"
+"--\n"
+"\n"
+"Decompress data using adaptive arithmetic coding.\n"
+"\n"
+"  data\n"
+"    bytes or any object that supports the buffer protocol.\n"
+"\n"
+"Returns a bytes object.");
+
+#define arith_uncompress_method METH_O
+
+static PyObject *
+py_arith_uncompress(PyObject *module, PyObject *data_obj)
+{
+   Py_buffer data = {NULL, NULL}; 
+   int ret = PyObject_GetBuffer(data_obj, &data, PyBUF_SIMPLE | PyBUF_READ);
+   if (ret == -1) {
+      return NULL;
+   }
+   unsigned int out_size = 0;
+   /* Size calculation is complex and dependent on stripe. So let the 
+      function allocate its own memory. */
+   unsigned char *out = arith_uncompress(data.buf, data.len, &out_size);
+   PyBuffer_Release(&data);
+   if (out == NULL) {
+      PyErr_SetString(PyExc_RuntimeError, "Error while decompressing data.");
+      return NULL;
+   }
+   PyObject *result = PyBytes_FromStringAndSize((char *)out, out_size);
+   free(out);
+   return result;
+}
+
+
 static PyMethodDef htscodecs_methods[] = {
    {"htscodecs_version", (PyCFunction)py_htscodecs_version, 
     htscodecs_version_method, htscodecs_version__doc__},
@@ -230,6 +310,10 @@ static PyMethodDef htscodecs_methods[] = {
     rans_compress_4x16_flags_method, rans_compress_4x16_flags__doc__},
    {"rans_uncompress_4x16", (PyCFunction)py_rans_uncompress_4x16, 
     rans_uncompress_4x16_method, rans_uncompress_4x16__doc__},
+   {"arith_compress_flags", (PyCFunction)arith_compress_flags, 
+    arith_compress_flags_method, arith_compress_flags__doc__},
+   {"arith_uncompress", (PyCFunction)py_arith_uncompress, 
+    arith_uncompress_method, arith_uncompress__doc__},
    {NULL,}
 };
 
