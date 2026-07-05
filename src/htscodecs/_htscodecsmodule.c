@@ -57,34 +57,34 @@ py_htscodecs_version(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(args))
 }
 
 
-PyDoc_STRVAR(rans_compress_4x16__doc__,
-"rans_compress_4x16($module, data, /, order=0)\n"
+PyDoc_STRVAR(rans_compress_4x16_flags__doc__,
+"rans_compress_4x16($module, data, /, flags=0)\n"
 "--\n"
 "\n"
 "Compress data using the rANS 4x16 codec.\n"
 "\n"
 "  data\n"
 "    bytes or any object that supports the buffer protocol.\n"
-"  order\n"
+"  flags\n"
 "    integer with bit flags set."
 "\n"
 "Returns a bytes object.");
 
-#define rans_compress_4x16_method (METH_VARARGS | METH_KEYWORDS)
+#define rans_compress_4x16_flags_method (METH_VARARGS | METH_KEYWORDS)
 
 static PyObject *
-py_rans_compress_4x16(PyObject *module, PyObject *args, PyObject *kwargs)
+rans_compress_4x16_flags(PyObject *module, PyObject *args, PyObject *kwargs)
 {
    Py_buffer data = {NULL, NULL}; 
-   int order = 0;
-   static char *const keywords[] =  {"", "order", NULL};
+   int flags = 0;
+   static char *const keywords[] =  {"", "flags", NULL};
    static const char *format = "y*|i:_htscodecs.rans_compress_4x16";
    int ret = PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords, 
-                                         &data, &order);
+                                         &data, &flags);
    if (!ret) {
       return NULL;
    }
-   unsigned int out_size = rans_compress_bound_4x16(data.len, order);
+   unsigned int out_size = rans_compress_bound_4x16(data.len, flags);
    PyObject *result = PyBytes_FromStringAndSize(NULL, out_size);
    if (result == NULL) {
       PyBuffer_Release(&data);
@@ -92,12 +92,12 @@ py_rans_compress_4x16(PyObject *module, PyObject *args, PyObject *kwargs)
    }
    unsigned char *result_buffer = (unsigned char *)PyBytes_AsString(result);
    unsigned char *out_value = rans_compress_to_4x16(
-      data.buf, data.len, result_buffer, &out_size, order);
+      data.buf, data.len, result_buffer, &out_size, flags);
    PyBuffer_Release(&data);
    if (out_value == NULL) {
       PyErr_Format(
          PyExc_RuntimeError, 
-         "Unable to run rans_compress_to_4x16. Order: %d", order
+         "Unable to run rans_compress_to_4x16. flags: %d", flags
       );
       return NULL;
    }
@@ -146,8 +146,8 @@ py_rans_uncompress_4x16(PyObject *module, PyObject *data_obj)
 static PyMethodDef htscodecs_methods[] = {
    {"htscodecs_version", py_htscodecs_version, htscodecs_version_method, 
     htscodecs_version__doc__},
-   {"rans_compress_4x16", (PyCFunction)py_rans_compress_4x16, 
-    rans_compress_4x16_method, rans_compress_4x16__doc__},
+   {"rans_compress_4x16_flags", (PyCFunction)rans_compress_4x16_flags, 
+    rans_compress_4x16_flags_method, rans_compress_4x16_flags__doc__},
    {"rans_uncompress_4x16", py_rans_uncompress_4x16, 
     rans_uncompress_4x16_method, rans_uncompress_4x16__doc__},
    {NULL,}
