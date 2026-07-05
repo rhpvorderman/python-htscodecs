@@ -41,8 +41,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "htscodecs/tokenise_name3.h"
 #include "htscodecs/varint.h"
 
+#define DEFAULT_ORDER 0
+#define DEFAULT_FLAGS 0
 #define DEFAULT_LEVEL 5
 #define DEFAULT_USE_ARITH 0
+
 
 PyDoc_STRVAR(htscodecs_version__doc__,
 "htscodecs_version($module)\n"
@@ -60,7 +63,7 @@ py_htscodecs_version(PyObject *Py_UNUSED(module), PyObject *Py_UNUSED(args))
 }
 
 PyDoc_STRVAR(rans_compress_4x8__doc__,
-"rans_compress_4x8($module, data, /, order=0)\n"
+"rans_compress_4x8($module, data, /, order=DEFAULT_ORDER)\n"
 "--\n"
 "\n"
 "Compress data using the rANS 4x8 codec.\n"
@@ -78,7 +81,7 @@ static PyObject *
 rans_compress_4x8(PyObject *module, PyObject *args, PyObject *kwargs)
 {
    Py_buffer data = {NULL, NULL}; 
-   int order = 0;
+   int order = DEFAULT_ORDER;
    static char *const keywords[] =  {"", "order", NULL};
    static const char *format = "y*|i:_htscodecs.rans_compress_4x16";
    int ret = PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords, 
@@ -145,7 +148,7 @@ rans_uncompress_4x8(PyObject *module, PyObject *data_obj)
 
 
 PyDoc_STRVAR(rans_compress_4x16_flags__doc__,
-"rans_compress_4x16($module, data, /, flags=0)\n"
+"rans_compress_4x16($module, data, /, flags=DEFAULT_FLAGS)\n"
 "--\n"
 "\n"
 "Compress data using the rANS 4x16 codec.\n"
@@ -163,7 +166,7 @@ static PyObject *
 rans_compress_4x16_flags(PyObject *module, PyObject *args, PyObject *kwargs)
 {
    Py_buffer data = {NULL, NULL}; 
-   int flags = 0;
+   int flags = DEFAULT_FLAGS;
    static char *const keywords[] =  {"", "flags", NULL};
    static const char *format = "y*|i:_htscodecs.rans_compress_4x16";
    int ret = PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords, 
@@ -224,7 +227,7 @@ py_rans_uncompress_4x16(PyObject *module, PyObject *data_obj)
 
 
 PyDoc_STRVAR(arith_compress_flags__doc__,
-"arith_compress_flags($module, data, /, flags=0)\n"
+"arith_compress_flags($module, data, /, flags=DEFAULT_FLAGS)\n"
 "--\n"
 "\n"
 "Compress data using adaptive arithmetic coding.\n"
@@ -242,7 +245,7 @@ static PyObject *
 arith_compress_flags(PyObject *module, PyObject *args, PyObject *kwargs)
 {
    Py_buffer data = {NULL, NULL}; 
-   int flags = 0;
+   int flags = DEFAULT_FLAGS;
    static char *const keywords[] =  {"", "flags", NULL};
    static const char *format = "y*|i:_htscodecs.arith_compress";
    int ret = PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords, 
@@ -403,6 +406,8 @@ static int htscodecs_exec(PyObject *module)
    PyModule_AddIntConstant(module, "RANS_FLAG_CAT", RANS_ORDER_CAT);
    PyModule_AddIntConstant(module, "RANS_FLAG_RLE", RANS_ORDER_RLE);
    PyModule_AddIntConstant(module, "RANS_FLAG_PACK", RANS_ORDER_PACK); 
+   PyModule_AddIntMacro(module, DEFAULT_ORDER);
+   PyModule_AddIntMacro(module, DEFAULT_FLAGS);
    PyModule_AddIntMacro(module, DEFAULT_LEVEL);
    PyModule_AddIntMacro(module, DEFAULT_USE_ARITH);
    return 0;
