@@ -41,6 +41,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "htscodecs/tokenise_name3.h"
 #include "htscodecs/varint.h"
 
+#define DEFAULT_LEVEL 5
+#define DEFAULT_USE_ARITH 0
+
 PyDoc_STRVAR(htscodecs_version__doc__,
 "htscodecs_version($module)\n"
 "--\n"
@@ -299,6 +302,76 @@ py_arith_uncompress(PyObject *module, PyObject *data_obj)
 }
 
 
+PyDoc_STRVAR(tok3_encode_names_block__doc__,
+"tok3_encode_names_block($module, names_block, /, level=DEFAULT_LEVEL,\n"
+"                        use_arith=DEFAULT_USE_ARITH)\n"
+"--\n"
+"\n"
+"Compress data using the tok3 encode names codec.\n"
+"\n"
+"This converts the names to a stream of tokens which is then compressed \n"
+"using the rANS 4x16 codec."
+"\n"
+"  names_block\n"
+"    ASCII block of strings with individual names separated by newlines or \\0 bytes\n"
+"  level\n"
+"    The level to compress from 1 to 9\n"
+"  use_arith\n"
+"     Set to True to use adaptive arithmetic coding instead of rANS 4x16.\n"
+"\n"
+"Returns a bytes object with the compressed data.");
+
+#define tok3_encode_names_block_method (METH_VARARGS | METH_KEYWORDS)
+
+static PyObject *
+tok3_encode_names_block(PyObject *module, PyObject *args, PyObject *kwargs)
+{
+   PyObject *names_block;
+   int level=DEFAULT_LEVEL;
+   int use_arith=DEFAULT_USE_ARITH;
+   static char *const keywords[] =  {"", "level", "use_arith", NULL};
+   static const char *format = "U|ip:_htscodecs.tok3_encode_nams_block";
+   int ret = PyArg_ParseTupleAndKeywords(args, kwargs, format, keywords, 
+                                         &names_block, &level, &use_arith);
+   if (!ret) {
+      return NULL;
+   }
+   Py_ssize_t string_length = PyUnicode_GetLength(names_block);
+   Py_ssize_t ascii_length = 0;
+   const char *names = PyUnicode_AsUTF8AndSize(names_block, &ascii_length);
+   if (ascii_length != string_length) {
+      PyErr_SetString(
+         PyExc_ValueError, 
+         "Only ASCII names can be encoded."
+      );
+      return NULL;
+   }
+   if (level < 1 || level > 9) {
+      PyErr_Format(
+         PyExc_ValueError,
+         "level must be a value between 1 and 9, got: %d", 
+         level
+      );
+      return NULL;
+   }
+
+   int out_size = 0;
+   unsigned char *out = tok3_encode_names(names, ascii_length, 
+      level, use_arith, &out_size, NULL );
+   if (out == NULL) {
+      PyErr_Format(
+         PyExc_RuntimeError, 
+         "Unable to run tok3_encode_names. level: %d, use_arith: %d", 
+         level, use_arith
+      );
+      return NULL;
+   }
+   PyObject *result = PyBytes_FromStringAndSize((char *)out, out_size);
+   free(out);
+   return result;
+}
+
+
 static PyMethodDef htscodecs_methods[] = {
    {"htscodecs_version", (PyCFunction)py_htscodecs_version, 
     htscodecs_version_method, htscodecs_version__doc__},
@@ -314,6 +387,8 @@ static PyMethodDef htscodecs_methods[] = {
     arith_compress_flags_method, arith_compress_flags__doc__},
    {"arith_uncompress", (PyCFunction)py_arith_uncompress, 
     arith_uncompress_method, arith_uncompress__doc__},
+   {"tok3_encode_names_block", (PyCFunction)tok3_encode_names_block,
+    tok3_encode_names_block_method, tok3_encode_names_block__doc__},
    {NULL,}
 };
 
@@ -328,6 +403,8 @@ static int htscodecs_exec(PyObject *module)
    PyModule_AddIntConstant(module, "RANS_FLAG_CAT", RANS_ORDER_CAT);
    PyModule_AddIntConstant(module, "RANS_FLAG_RLE", RANS_ORDER_RLE);
    PyModule_AddIntConstant(module, "RANS_FLAG_PACK", RANS_ORDER_PACK); 
+   PyModule_AddIntMacro(module, DEFAULT_LEVEL);
+   PyModule_AddIntMacro(module, DEFAULT_USE_ARITH);
    return 0;
 }
 
