@@ -27,9 +27,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #define PY_SSIZE_T_CLEAN
-
-
+#define Py_LIMITED_API  0x030B00F0
 #include "Python.h"
+#include <stdlib.h>
 
 #include "htscodecs/arith_dynamic.h"
 #include "htscodecs/fqzcomp_qual.h"
@@ -168,26 +168,19 @@ rans_compress_4x16_flags(PyObject *module, PyObject *args, PyObject *kwargs)
    if (!ret) {
       return NULL;
    }
-   unsigned int out_size = rans_compress_bound_4x16(data.len, flags);
-   PyObject *result = PyBytes_FromStringAndSize(NULL, out_size);
-   if (result == NULL) {
-      PyBuffer_Release(&data);
-      return PyErr_NoMemory();
-   }
-   unsigned char *result_buffer = (unsigned char *)PyBytes_AsString(result);
-   unsigned char *out_value = rans_compress_to_4x16(
-      data.buf, data.len, result_buffer, &out_size, flags);
+   unsigned int out_size = 0;
+   unsigned char *out = rans_compress_4x16(
+      data.buf, data.len, &out_size, flags);
    PyBuffer_Release(&data);
-   if (out_value == NULL) {
+   if (out == NULL) {
       PyErr_Format(
          PyExc_RuntimeError, 
          "Unable to run rans_compress_to_4x16. flags: %d", flags
       );
       return NULL;
    }
-   if (_PyBytes_Resize(&result, out_size) == -1) {
-      return NULL;
-   }
+   PyObject *result = PyBytes_FromStringAndSize((char *)out, out_size);
+   free(out);
    return result;
 }
 
