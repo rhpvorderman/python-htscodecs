@@ -310,7 +310,7 @@ PyDoc_STRVAR(tok3_encode_names_block__doc__,
 "                        use_arith=DEFAULT_USE_ARITH)\n"
 "--\n"
 "\n"
-"Compress data using the tok3 encode names codec.\n"
+"Compress data using the tok3 names codec.\n"
 "\n"
 "This converts the names to a stream of tokens which is then compressed \n"
 "using the rANS 4x16 codec."
@@ -374,6 +374,39 @@ tok3_encode_names_block(PyObject *module, PyObject *args, PyObject *kwargs)
    return result;
 }
 
+PyDoc_STRVAR(tok3_decode_names_block__doc__,
+"tok3_decode_names_block($module, data, /)\n"
+"--\n"
+"\n"
+"Decompress data using the tok3 names codec.\n"
+"\n"
+"  data\n"
+"    The compressed data in an object that supports the buffer protocol.\n"
+"\n"
+"Returns a str object with individual names separated by \\0 values.");
+
+#define tok3_decode_names_block_method METH_O
+
+static PyObject *
+tok3_decode_names_block(PyObject *module, PyObject *data_obj)
+{
+   Py_buffer data = {NULL, NULL}; 
+   int ret = PyObject_GetBuffer(data_obj, &data, PyBUF_SIMPLE | PyBUF_READ);
+   if (ret == -1) {
+      return NULL;
+   }
+   unsigned int out_size = 0;
+   unsigned char *out = tok3_decode_names(data.buf, data.len, &out_size);
+   PyBuffer_Release(&data);
+   if (out == NULL) {
+      PyErr_SetString(PyExc_RuntimeError, "Error while decompressing data.");
+      return NULL;
+   }
+   PyObject *result = PyUnicode_DecodeASCII((char *)out, out_size, NULL);
+   free(out);
+   return result;
+}
+
 
 static PyMethodDef htscodecs_methods[] = {
    {"htscodecs_version", (PyCFunction)py_htscodecs_version, 
@@ -392,6 +425,8 @@ static PyMethodDef htscodecs_methods[] = {
     arith_uncompress_method, arith_uncompress__doc__},
    {"tok3_encode_names_block", (PyCFunction)tok3_encode_names_block,
     tok3_encode_names_block_method, tok3_encode_names_block__doc__},
+   {"tok3_decode_names_block", (PyCFunction)tok3_decode_names_block,
+    tok3_decode_names_block_method, tok3_decode_names_block__doc__},
    {NULL,}
 };
 
