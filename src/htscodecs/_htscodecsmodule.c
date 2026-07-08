@@ -30,6 +30,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define Py_LIMITED_API  0x030B00F0
 #include "Python.h"
 #include <stdlib.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "htscodecs/arith_dynamic.h"
 #include "htscodecs/fqzcomp_qual.h"
@@ -304,6 +307,27 @@ py_arith_uncompress(PyObject *module, PyObject *data_obj)
    return result;
 }
 
+static bool
+does_tok3_encode_names_mutate_input(void) 
+{
+   /* Previously tok3_encode_names did mutate input by setting \0 values 
+      at the input at the place of the name delimiters, regardless whether 
+      these where \0 or not. 
+      Fixed here: https://github.com/samtools/htscodecs/pull/152
+      Rather than version matching do a proof is in the pudding type test.
+      */
+   char *names      = "name1\nname2\nname3";
+   char *names_orig = "name1\nname2\nname3";
+   int out_len = 0;
+   unsigned char *out = tok3_encode_names(names, strlen(names), 1, 0, &out_len, NULL);
+   free(out);
+   if (strcmp(names, names_orig) != 0) {
+      fprintf(stderr, names);
+      return true;
+   }
+   return false;
+}
+
 
 PyDoc_STRVAR(tok3_encode_names_block__doc__,
 "tok3_encode_names_block($module, names_block, /, level=DEFAULT_LEVEL,\n"
@@ -357,10 +381,22 @@ tok3_encode_names_block(PyObject *module, PyObject *args, PyObject *kwargs)
       );
       return NULL;
    }
-
+   bool tok3_mutates_input = does_tok3_encode_names_mutate_input();
+   char *tmp;
+   if (tok3_mutates_input) {
+      tmp = PyMem_Malloc(ascii_length);
+      if (tmp == NULL) {
+         return PyErr_NoMemory();
+      }
+   } else {
+      tmp = (char *)names;
+   }
    int out_size = 0;
-   unsigned char *out = tok3_encode_names(names, ascii_length, 
+   unsigned char *out = tok3_encode_names(tmp, ascii_length, 
       level, use_arith, &out_size, NULL );
+   if (tok3_mutates_input) {
+      PyMem_Free(tmp);
+   }
    if (out == NULL) {
       PyErr_Format(
          PyExc_RuntimeError, 
