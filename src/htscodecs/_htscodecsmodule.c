@@ -49,6 +49,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DEFAULT_LEVEL 5
 #define DEFAULT_USE_ARITH 0
 
+typedef struct _htscodecs_state {
+   bool tok3_encode_names_mutates_input;
+} HtsCodecsState;
 
 PyDoc_STRVAR(htscodecs_version__doc__,
 "htscodecs_version($module)\n"
@@ -380,7 +383,11 @@ tok3_encode_names_block(PyObject *module, PyObject *args, PyObject *kwargs)
       );
       return NULL;
    }
-   bool tok3_mutates_input = does_tok3_encode_names_mutate_input();
+   HtsCodecsState *state = PyModule_GetState(module);
+   if (state == NULL) {
+      return NULL;
+   }
+   bool tok3_mutates_input = state->tok3_encode_names_mutates_input;
    char *tmp;
    if (tok3_mutates_input) {
       tmp = PyMem_Malloc(ascii_length);
@@ -466,11 +473,14 @@ static PyMethodDef htscodecs_methods[] = {
    {NULL,}
 };
 
-static struct _htscodecs_state {
-} HtsCodecsState;
 
 static int htscodecs_exec(PyObject *module)
 {
+   HtsCodecsState *state = PyModule_GetState(module);
+   if (state == NULL) {
+      return -1;
+   }
+   state->tok3_encode_names_mutates_input = does_tok3_encode_names_mutate_input();
    PyModule_AddIntConstant(module, "RANS_FLAG_X32", RANS_ORDER_X32);
    PyModule_AddIntConstant(module, "RANS_FLAG_STRIPE", RANS_ORDER_STRIPE);
    PyModule_AddIntConstant(module, "RANS_FLAG_NOSZ", RANS_ORDER_NOSZ);
@@ -500,6 +510,7 @@ static PyModuleDef htscodecs_module_def = {
    .m_clear = NULL,
    .m_free = NULL,
 };
+
 
 PyMODINIT_FUNC
 PyInit__htscodecs(void) {
