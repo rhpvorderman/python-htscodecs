@@ -316,13 +316,12 @@ does_tok3_encode_names_mutate_input(void)
       Fixed here: https://github.com/samtools/htscodecs/pull/152
       Rather than version matching do a proof is in the pudding type test.
       */
-   char *names      = "name1\nname2\nname3";
-   char *names_orig = "name1\nname2\nname3";
+   char names[]      = "name1\nname2\nname3";
+   char names_orig[] = "name1\nname2\nname3";
    int out_len = 0;
    unsigned char *out = tok3_encode_names(names, strlen(names), 1, 0, &out_len, NULL);
    free(out);
    if (strcmp(names, names_orig) != 0) {
-      fprintf(stderr, names);
       return true;
    }
    return false;
