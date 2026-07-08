@@ -80,6 +80,7 @@ class BuildHtsCodecsExt(build_ext):
             else:
                 raise NotImplementedError(
                     f"Unsupported platform: {sys.platform}")
+            ext.libraries = ["bz2"]
             ext.include_dirs = [os.path.join(build_dir, "htscodecs")]
         super().build_extension(ext)
 
