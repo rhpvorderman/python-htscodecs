@@ -387,6 +387,7 @@ tok3_encode_names_block(PyObject *module, PyObject *args, PyObject *kwargs)
       if (tmp == NULL) {
          return PyErr_NoMemory();
       }
+      memcpy(tmp, names, ascii_length);
    } else {
       tmp = (char *)names;
    }
@@ -426,7 +427,7 @@ static PyObject *
 tok3_decode_names_block(PyObject *module, PyObject *data_obj)
 {
    Py_buffer data = {NULL, NULL}; 
-   int ret = PyObject_GetBuffer(data_obj, &data, PyBUF_SIMPLE | PyBUF_READ);
+   int ret = PyObject_GetBuffer(data_obj, &data, PyBUF_SIMPLE);
    if (ret == -1) {
       return NULL;
    }
