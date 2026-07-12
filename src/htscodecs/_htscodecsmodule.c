@@ -342,7 +342,8 @@ PyDoc_STRVAR(tok3_encode_names_block__doc__,
 "using the rANS 4x16 codec."
 "\n"
 "  names_block\n"
-"    ASCII block of strings with individual names separated by newlines or \\0 bytes\n"
+"    ASCII block of strings with individual names terminated by newlines or \n"
+"    \\0 bytes. An unterminated name at the end will not be compressed.\n"
 "  level\n"
 "    The level to compress from 1 to 9\n"
 "  use_arith\n"
@@ -426,7 +427,7 @@ PyDoc_STRVAR(tok3_decode_names_block__doc__,
 "  data\n"
 "    The compressed data in an object that supports the buffer protocol.\n"
 "\n"
-"Returns a str object with individual names separated by \\0 values.");
+"Returns a str object with individual names terminated by \\0 values.");
 
 #define tok3_decode_names_block_method METH_O
 
