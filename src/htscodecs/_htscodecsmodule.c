@@ -35,14 +35,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 
 #include "htscodecs/arith_dynamic.h"
-#include "htscodecs/fqzcomp_qual.h"
 #include "htscodecs/htscodecs.h"
-#include "htscodecs/pack.h"
 #include "htscodecs/rANS_static4x16.h"
 #include "htscodecs/rANS_static.h"
-#include "htscodecs/rle.h"
 #include "htscodecs/tokenise_name3.h"
-#include "htscodecs/varint.h"
 
 #define DEFAULT_ORDER 0
 #define DEFAULT_FLAGS 0
